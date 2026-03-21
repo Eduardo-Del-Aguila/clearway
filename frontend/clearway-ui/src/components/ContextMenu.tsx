@@ -1,3 +1,4 @@
+
 interface Props {
   x: number
   y: number
@@ -18,6 +19,7 @@ const ContextMenu = ({ x, y, lat, lng, onAddHospital, onAddAmbulance, onAddTraff
     { label: 'Agregar punto de emergencia', action: () => onAddEmergency(lat, lng) },
   ]
 
+
   return (
     <div
       style={{ top: y, left: x }}
@@ -35,6 +37,7 @@ const ContextMenu = ({ x, y, lat, lng, onAddHospital, onAddAmbulance, onAddTraff
       <hr className="border-gray-600 my-1" />
       <button
         onClick={onClose}
+        
         className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700"
       >
         Cancelar

@@ -1,0 +1,78 @@
+import { useState } from 'react'
+import axios from 'axios'
+
+interface Props {
+  lat: number
+  lng: number
+  onClose: () => void
+  onSuccess: () => void
+}
+
+const AddHospitalModal = ({ lat, lng, onClose, onSuccess }: Props) => {
+  const [nombre, setNombre] = useState('')
+  const [capacidad, setCapacidad] = useState(3)
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async () => {
+    if (!nombre) return
+    setLoading(true)
+    try {
+      await axios.post('http://localhost:3001/api/hospitales', {
+        nombre,
+        latitud: lat,
+        longitud: lng,
+        capacidad_ambulancias: capacidad
+      })
+      onSuccess()
+      onClose()
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-black/50">
+      <div className="bg-gray-800 rounded-lg p-6 w-80 text-white">
+        <h2 className="text-lg font-bold mb-4">Agregar hospital</h2>
+        <div className="flex flex-col gap-3">
+          <div>
+            <label className="text-sm text-gray-400">Nombre del hospital</label>
+            <input
+              type="text"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              className="w-full mt-1 bg-gray-700 rounded px-3 py-2 text-sm"
+              placeholder="Ej: Hospital Rebagliati"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-gray-400">Capacidad de ambulancias</label>
+            <input
+              type="number"
+              value={capacidad}
+              onChange={(e) => setCapacidad(Number(e.target.value))}
+              min={1}
+              max={3}
+              className="w-full mt-1 bg-gray-700 rounded px-3 py-2 text-sm"
+            />
+          </div>
+          <p className="text-xs text-gray-500">Coordenadas: {lat.toFixed(4)}, {lng.toFixed(4)}</p>
+        </div>
+        <div className="flex gap-2 mt-4">
+          <button onClick={onClose} className="flex-1 py-2 rounded bg-gray-700 text-sm">Cancelar</button>
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="flex-1 py-2 rounded bg-red-600 text-sm font-bold"
+          >
+            {loading ? 'Guardando...' : 'Guardar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default AddHospitalModal
