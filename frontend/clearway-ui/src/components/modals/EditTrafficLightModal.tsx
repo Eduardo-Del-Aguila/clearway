@@ -1,13 +1,7 @@
 import { useState } from 'react'
 import axios from 'axios'
+import type { TrafficLight } from '../../types'
 
-interface TrafficLight {
-  id: number
-  calle: string
-  tiempo_verde: number
-  tiempo_amarillo: number
-  tiempo_rojo: number
-}
 
 interface Props {
   trafficLight: TrafficLight
@@ -21,6 +15,7 @@ const EditTrafficLightModal = ({ trafficLight, onClose, onSuccess }: Props) => {
   const [tiempoAmarillo, setTiempoAmarillo] = useState(trafficLight.tiempo_amarillo)
   const [tiempoRojo, setTiempoRojo] = useState(trafficLight.tiempo_rojo)
   const [loading, setLoading] = useState(false)
+  const [estado, setEstado] = useState(trafficLight.estado)
 
   const handleSubmit = async () => {
     setLoading(true)
@@ -29,7 +24,8 @@ const EditTrafficLightModal = ({ trafficLight, onClose, onSuccess }: Props) => {
         calle,
         tiempo_verde: tiempoVerde,
         tiempo_amarillo: tiempoAmarillo,
-        tiempo_rojo: tiempoRojo
+        tiempo_rojo: tiempoRojo,
+        estado
       })
       onSuccess()
       onClose()
@@ -77,6 +73,18 @@ const EditTrafficLightModal = ({ trafficLight, onClose, onSuccess }: Props) => {
             <label className="text-sm text-gray-400">Tiempo en rojo (seg)</label>
             <input type="number" value={tiempoRojo} onChange={(e) => setTiempoRojo(Number(e.target.value))} className="w-full mt-1 bg-gray-700 rounded px-3 py-2 text-sm" />
           </div>
+        </div>
+        <div>
+          <label className="text-sm text-gray-400">Estado</label>
+          <select
+            value={estado}
+            onChange={(e) => setEstado(e.target.value)}
+            className="w-full mt-1 bg-gray-700 rounded px-3 py-2 text-sm"
+          >
+            <option value="rojo">Rojo</option>
+            <option value="amarillo">Amarillo</option>
+            <option value="verde">Verde</option>
+          </select>
         </div>
         <div className="flex gap-2 mt-4">
           <button onClick={handleDelete} className="py-2 px-3 rounded bg-red-900 text-sm">Eliminar</button>

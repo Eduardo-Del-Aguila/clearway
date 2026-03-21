@@ -11,13 +11,14 @@ import AddTrafficLightModal from './modals/AddTrafficLightModal'
 import EditTrafficLightModal from './modals/EditTrafficLightModal'
 
 //Mi fiel amigo leaflet
-import { MapContainer, TileLayer, Marker, Popup, Polyline, Tooltip } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Polyline, Tooltip } from 'react-leaflet'
 import L from 'leaflet'
 
 //componentes
 // import MapClickHandler from './MapClickHandler';
 import MapRightClickHandler from './MapRightClickHandler';
 import ContextMenu from './ContextMenu';
+import type { Emergency } from '../types';
 
 // Ambulancia Eduardo-SAC
 const ambulanceIcon = L.icon({
@@ -37,36 +38,23 @@ const emergencyIcon = L.icon({
 const getTrafficLightIcon = (estado: string, estadoEmergencia: string) => L.divIcon({
   className: '',
   html: `
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
       <div style="
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: ${estado === 'verde' ? '#22c55e' : estado === 'amarillo' ? '#eab308' : '#ef4444'};
-        border: 2px solid white;
+        width:20px;height:20px;border-radius:50%;
+        background:${estado === 'verde' ? '#22c55e' : estado === 'amarillo' ? '#eab308' : '#ef4444'};
+        border:2px solid white;
       "></div>
-      ${estadoEmergencia !== 'apagado' ? `
-        <div style="
-          width: 25px;
-          height: 25px;
-          border-radius: 50%;
-          background: ${estadoEmergencia === 'verde' ? '#22c55e' : '#ef4444'};
-          border: 2px solid white;
-          font-size: 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">🚑</div>
-      ` : ''}
+      <div style="
+        width:25px;height:25px;border-radius:50%;
+        background:${estadoEmergencia === 'verde' ? '#22c55e' : estadoEmergencia === 'rojo' ? '#ef4444' : '#6b7280'};
+        border:2px solid white;font-size:14px;
+        display:flex;align-items:center;justify-content:center;
+      ">🚑</div>
     </div>
   `,
-  iconSize: [20, 40],
+  iconSize: [25, 50],
 })
 
-interface Emergency {
-  lat: number
-  lng: number
-}
 
 interface ContextMenuState {
   x: number
@@ -76,7 +64,12 @@ interface ContextMenuState {
 }
 
 
-const Map = () => {
+interface Props {
+  localStates: Record<number, string>
+  counters: Record<number, number>
+}
+
+const Map = ({ localStates, counters }: Props) => {
     //Obtenemos la posicion en tiempo real via Socket.io
     const { position } = useSocket()
     const { trafficLights } = useTrafficLights()
@@ -168,17 +161,27 @@ const Map = () => {
               <Marker
                 key={tl.id}
                 position={[tl.latitud, tl.longitud]}
-                icon={getTrafficLightIcon(tl.estado, tl.estado_emergencia)}
+                icon={getTrafficLightIcon(localStates[tl.id] || tl.estado, tl.estado_emergencia)}
                 eventHandlers={{ click: () => setEditTrafficLight(tl) }}
               >
-                <Tooltip>
-                  <div className='flex flex-col gap-1 p-1'>
-                    <span>{tl.calle}</span>
-                    <hr className='w-full'/>
-                    <span>Estado: {tl.estado}</span>
-                    <span>Estado de <span className='text-red-400'>emergencia</span>: {tl.estado_emergencia}</span>
+              <Tooltip>
+                <div className='flex flex-col gap-1 p-1'>
+                  <span>{tl.calle}</span>
+                  <hr className='w-full'/>
+                  <span>Estado: {localStates[tl.id] || tl.estado}</span>
+                  <span>Estado de <span className='text-red-400'>emergencia</span>: {tl.estado_emergencia}</span>
+                  <hr className='w-full'/>
+                  <div className='flex w-full justify-around'>
+                    <span>Luz roja: {tl.tiempo_rojo}s</span>
+                    <span>Luz verde: {tl.tiempo_verde}s</span>
                   </div>
-                </Tooltip>
+                  {counters[tl.id] !== undefined && (
+                    <span className='text-center font-bold text-yellow-400'>
+                      Cambia en: {counters[tl.id]}s
+                    </span>
+                  )}
+                </div>
+              </Tooltip>
               </Marker>
             ))}
             {routeCoords.length > 0 && (

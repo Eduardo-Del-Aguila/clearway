@@ -13,11 +13,14 @@ router.get('/', async (req, res) => {
 
 //Creamos nuestros semaforos
 router.post('/', async (req, res) => {
-  const { latitud, longitud, calle } = req.body
+  const { latitud, longitud, calle, estado, tiempo_verde, tiempo_amarillo, tiempo_rojo } = req.body
   try {
     const resultado = await pool.query(
-      'INSERT INTO semaforos (latitud, longitud, calle) VALUES ($1, $2, $3) RETURNING *',
-      [latitud, longitud, calle]
+      `INSERT INTO semaforos 
+        (latitud, longitud, calle, estado, tiempo_verde, tiempo_amarillo, tiempo_rojo) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) 
+       RETURNING *`,
+      [latitud, longitud, calle, estado || 'rojo', tiempo_verde || 30, tiempo_amarillo || 5, tiempo_rojo || 30]
     )
     res.json(resultado.rows[0])
   } catch (error) {
@@ -25,7 +28,7 @@ router.post('/', async (req, res) => {
   }
 })
 
-//Editamos el estado de emergencia ambulancias
+//Editamos el estado de emergencia semaforos
 router.put('/:id/emergencia', async (req, res) => {
   const { id } = req.params
   const { estado_emergencia } = req.body
@@ -44,11 +47,11 @@ router.put('/:id/emergencia', async (req, res) => {
 // Actualizamos los datos de un semáforo
 router.put('/:id', async (req, res) => {
   const { id } = req.params
-  const { calle, tiempo_verde, tiempo_amarillo, tiempo_rojo } = req.body
+  const { calle, tiempo_verde, tiempo_amarillo, tiempo_rojo, estado} = req.body
   try {
     const resultado = await pool.query(
-      'UPDATE semaforos SET calle = $1, tiempo_verde = $2, tiempo_amarillo = $3, tiempo_rojo = $4 WHERE id = $5 RETURNING *',
-      [calle, tiempo_verde, tiempo_amarillo, tiempo_rojo, id]
+      'UPDATE semaforos SET calle = $1, tiempo_verde = $2, tiempo_amarillo = $3, tiempo_rojo = $4, estado = $5 WHERE id = $6 RETURNING *',
+      [calle, tiempo_verde, tiempo_amarillo, tiempo_rojo, estado, id]
     )
     res.json(resultado.rows[0])
   } catch (error) {

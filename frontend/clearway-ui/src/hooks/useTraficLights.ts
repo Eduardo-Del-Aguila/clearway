@@ -1,15 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-
-interface TrafficLight {
-  id: number
-  latitud: number
-  longitud: number
-  calle: string
-  estado: string
-  prioridad_emergencia: boolean
-  estado_emergencia: string
-}
+import type { TrafficLight } from '../types'
 
 
 export const useTrafficLights = () => {

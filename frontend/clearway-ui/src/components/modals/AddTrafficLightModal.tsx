@@ -17,6 +17,7 @@ const AddTrafficLightModal = ({ lat, lng, onClose, onSuccess }: Props) => {
   const [loading, setLoading] = useState(false)
   const [validating, setValidating] = useState(true)
   const [isValid, setIsValid] = useState(false)
+  const [estado, setEstado] = useState('rojo')
   const { getRoadName, isOnRoad } = useGeocoding()
 
   useEffect(() => {
@@ -39,14 +40,15 @@ const AddTrafficLightModal = ({ lat, lng, onClose, onSuccess }: Props) => {
     if (!calle) return
     setLoading(true)
     try {
-      await axios.post('http://localhost:3001/api/semaforos', {
-        latitud: lat,
-        longitud: lng,
-        calle,
-        tiempo_verde: tiempoVerde,
-        tiempo_amarillo: tiempoAmarillo,
-        tiempo_rojo: tiempoRojo
-      })
+    await axios.post('http://localhost:3001/api/semaforos', {
+      latitud: lat,
+      longitud: lng,
+      calle,
+      estado,
+      tiempo_verde: tiempoVerde,
+      tiempo_amarillo: tiempoAmarillo,
+      tiempo_rojo: tiempoRojo
+    })
       onSuccess()
       onClose()
     } catch (error) {
@@ -91,6 +93,18 @@ const AddTrafficLightModal = ({ lat, lng, onClose, onSuccess }: Props) => {
               <label className="text-sm text-gray-400">Tiempo en rojo (seg)</label>
               <input type="number" value={tiempoRojo} onChange={(e) => setTiempoRojo(Number(e.target.value))} className="w-full mt-1 bg-gray-700 rounded px-3 py-2 text-sm" />
             </div>
+            <div>
+              <label className="text-sm text-gray-400">Estado inicial</label>
+              <select
+                value={estado}
+                onChange={(e) => setEstado(e.target.value)}
+                className="w-full mt-1 bg-gray-700 rounded px-3 py-2 text-sm"
+              >
+                <option value="rojo">Rojo</option>
+                <option value="amarillo">Amarillo</option>
+                <option value="verde">Verde</option>
+              </select>
+            </div>            
             <p className="text-xs text-gray-500">Coordenadas: {lat.toFixed(4)}, {lng.toFixed(4)}</p>
             <div className="flex gap-2 mt-2">
               <button onClick={onClose} className="flex-1 py-2 rounded bg-gray-700 text-sm">Cancelar</button>
