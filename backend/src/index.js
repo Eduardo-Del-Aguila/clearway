@@ -1,18 +1,26 @@
 const express = require('express')
 const cors = require('cors')
+const http = require('http')
+const { Server } = require('socket.io')
 require('dotenv').config()
-
-
-const app = express()
-const PORT = process.env.PORT || 3001
-
-app.use(cors())
-app.use(express.json())
 
 const ambulanciasRouter = require('./routes/ambulancias.route')
 const semaforosRouter = require('./routes/semaforos.route')
 const rutasRouter = require('./routes/rutas.route')
 
+const app = express()
+const PORT = process.env.PORT || 3001
+const server = http.createServer(app)
+const io = new Server(server, {
+    cors: 
+    {
+        origin: 'http://localhost:5173',
+        methods: ['GET', 'POST']
+    }
+})
+
+app.use(cors())
+app.use(express.json())
 
 app.use('/api/semaforos', semaforosRouter)
 app.use('/api/ambulancias', ambulanciasRouter)
@@ -22,6 +30,26 @@ app.get('/', (req, res) => {
   res.json({ mensaje: 'ClearWay AI backend funcionando' })
 })
 
-app.listen(PORT, () => {
+// Cuando un cliente se conecta al servidor via Socket.io
+io.on('connection', (socket) => {
+  console.log('Cliente conectado:', socket.id)
+
+  // Escuchamos el evento 'ambulancia:movimiento'
+  // Este evento lo emite el simulador cada 2 segundos
+  socket.on('ambulancia:movimiento', (data) => {
+    console.log('Posicion recibida:', data)
+    
+    // io.emit reenvía el evento a TODOS los clientes conectados
+    // Esto incluye el frontend, que actualizara el mapa automaticamente
+    io.emit('ambulancia:movimiento', data)
+  })
+
+  // Cuando un cliente se desconecta
+  socket.on('disconnect', () => {
+    console.log('Cliente desconectado:', socket.id)
+  })
+})
+
+server.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`)
 })
