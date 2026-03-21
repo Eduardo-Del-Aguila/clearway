@@ -30,7 +30,7 @@ app.get('/', (req, res) => {
   res.json({ mensaje: 'ClearWay AI backend funcionando' })
 })
 
-// Cuando un cliente se conecta al servidor via Socket.io
+// Coneccion al servidor via Socket.io https://socket.io/docs/v4/server-api/
 io.on('connection', (socket) => {
   console.log('Cliente conectado:', socket.id)
 

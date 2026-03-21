@@ -1,26 +1,31 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 
-interface TraficLight {
+interface TrafficLight {
   id: number
   latitud: number
   longitud: number
   calle: string
   estado: string
   prioridad_emergencia: boolean
+  estado_emergencia: string
 }
 
-export const useTraficlights = () => {
-  const [traficLight, setTraficlight] = useState<TraficLight[]>([])
+
+export const useTrafficLights = () => {
+  const [trafficLights, setTrafficLights] = useState<TrafficLight[]>([])
 
   useEffect(() => {
-    const fetchtraficlights = async () => {
-      const { data } = await axios.get('http://localhost:3001/api/semaforos')
-      setTraficlight(data)
+    const fetchTrafficLights = async () => {
+    const { data } = await axios.get('http://localhost:3001/api/semaforos')
+      setTrafficLights(data)
     }
 
-    fetchtraficlights()
+    fetchTrafficLights()
+    const interval = setInterval(fetchTrafficLights, 3000)
+
+    return () => clearInterval(interval)
   }, [])
 
-  return { traficLight }
+  return { trafficLights }
 }

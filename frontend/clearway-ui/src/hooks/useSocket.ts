@@ -5,8 +5,8 @@ const socket = io('http://localhost:3001')
 
 interface Position {
   id: number
-  latitud: number
-  longitud: number
+  latitude: number
+  longitude: number
 }
 
 export const useSocket = () => {

@@ -11,4 +11,20 @@ router.get('/', async (req, res) => {
   }
 })
 
+//Creamos nuestras ambulancias
+router.put('/:id/emergencia', async (req, res) => {
+  const { id } = req.params
+  const { estado_emergencia } = req.body
+
+  try {
+    await pool.query(
+      'UPDATE semaforos SET estado_emergencia = $1 WHERE id = $2',
+      [estado_emergencia, id]
+    )
+    res.json({ mensaje: 'Estado de emergencia actualizado' })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
 module.exports = router
