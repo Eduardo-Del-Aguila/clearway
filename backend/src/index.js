@@ -7,6 +7,8 @@ require('dotenv').config()
 const ambulanciasRouter = require('./routes/ambulancias.route')
 const semaforosRouter = require('./routes/semaforos.route')
 const rutasRouter = require('./routes/rutas.route')
+const hospitalesRouter = require('./routes/hospitales.route')
+
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -25,6 +27,8 @@ app.use(express.json())
 app.use('/api/semaforos', semaforosRouter)
 app.use('/api/ambulancias', ambulanciasRouter)
 app.use('/api/rutas', rutasRouter)
+app.use('/api/hospitales', hospitalesRouter)
+
 
 app.get('/', (req, res) => {
   res.json({ mensaje: 'ClearWay AI backend funcionando' })
