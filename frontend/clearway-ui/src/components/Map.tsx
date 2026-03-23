@@ -4,26 +4,33 @@ import { useState } from 'react';
 import { useRoute } from '../hooks/useRoute';
 import { useSocket } from '../hooks/useSocket'
 import { useTrafficLights } from '../hooks/useTraficLights';
-
+import { useHospitals } from '../hooks/useHospitals'
 //Modals
 import AddHospitalModal from './modals/AddHospitalModal'
 import AddTrafficLightModal from './modals/AddTrafficLightModal'
 import EditTrafficLightModal from './modals/EditTrafficLightModal'
+import EditHospitalModal from './modals/EditHospitalModal'
+import HospitalDetailModal from './modals/HospitalDetailModal'
 
 //Mi fiel amigo leaflet
-import { MapContainer, TileLayer, Marker, Polyline, Tooltip } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Tooltip, Polyline, Circle } from 'react-leaflet'
 import L from 'leaflet'
 
 //componentes
 // import MapClickHandler from './MapClickHandler';
 import MapRightClickHandler from './MapRightClickHandler';
 import ContextMenu from './ContextMenu';
-import type { Emergency } from '../types';
+import type { Emergency, Hospital } from '../types';
 
 // Ambulancia Eduardo-SAC
 const ambulanceIcon = L.icon({
     iconUrl: 'https://cdn-icons-png.flaticon.com/512/1048/1048313.png',
     iconSize: [40, 40],
+})
+
+const hospitalIcon = L.icon({
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/619/619153.png',
+  iconSize: [36, 36],
 })
 
 // merry chismas
@@ -69,17 +76,25 @@ interface Props {
   counters: Record<number, number>
 }
 
+const raidusCircle = 1500
+
 const Map = ({ localStates, counters }: Props) => {
-    //Obtenemos la posicion en tiempo real via Socket.io
+    // hooks personalizados
+    const { hospitals } = useHospitals()
     const { position } = useSocket()
     const { trafficLights } = useTrafficLights()
     const { routeCoords, calculateRoute } = useRoute()
+    // hooks normales
     const [emergency, setEmergency] = useState<Emergency | null>(null)
     const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
     //Mis modales
+    const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null)
     const [showHospitalModal, setShowHospitalModal] = useState<{lat: number, lng: number} | null>(null)
     const [showTrafficLightModal, setShowTrafficLightModal] = useState<{lat: number, lng: number} | null>(null)
+    const [hospitalDetail, setHospitalDetail] = useState<Hospital | null>(null)
+    //Modals EDITACION
     const [editTrafficLight, setEditTrafficLight] = useState<any | null>(null)
+    const [editHospital, setEditHospital] = useState<Hospital | null>(null)
     
     const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
       if(e.key == 'Enter'){
@@ -191,6 +206,35 @@ const Map = ({ localStates, counters }: Props) => {
                 weight={4}
               />
             )}
+            {hospitals.map((hospital) => (
+            <Marker
+              key={hospital.id}
+              position={[hospital.latitud, hospital.longitud]}
+              icon={hospitalIcon}
+              eventHandlers={{ 
+                click: () => setSelectedHospital(selectedHospital?.id === hospital.id ? null : hospital),
+                dblclick: () => setHospitalDetail(hospital)
+              }}
+            >
+              <Tooltip>{hospital.nombre}</Tooltip>
+            </Marker>
+          ))}
+          {editHospital && (
+            <EditHospitalModal
+              hospital={editHospital}
+              onClose={() => setEditHospital(null)}
+              onSuccess={() => setEditHospital(null)}
+            />
+          )}
+
+          {selectedHospital && (
+            <Circle
+              center={[selectedHospital.latitud, selectedHospital.longitud]}
+              radius={raidusCircle}
+              pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.1 }}
+            />
+          )}
+
         </MapContainer>
         {contextMenu && (
           <ContextMenu
@@ -205,14 +249,27 @@ const Map = ({ localStates, counters }: Props) => {
             onClose={() => setContextMenu(null)}
           />
         )}
+
+
         {/* INICIO DE MODALES */}
         {/* MODAL HOSPITAL */}
+        {hospitalDetail && (
+        <HospitalDetailModal
+            hospital={hospitalDetail}
+            onClose={() => setHospitalDetail(null)}
+            onEdit={() => {
+              setEditHospital(hospitalDetail)
+              setHospitalDetail(null)
+            }}
+          />
+        )}
         {showHospitalModal && (
           <AddHospitalModal
             lat={showHospitalModal.lat}
             lng={showHospitalModal.lng}
             onClose={() => setShowHospitalModal(null)}
-            onSuccess={() => console.log('Hospital agregado')}
+            onSuccess={() => setShowHospitalModal(null)}
+            existingHospitals={hospitals}
           />
         )}
         {/* MODAL SEMAFOROS */}
