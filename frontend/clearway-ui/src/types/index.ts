@@ -37,3 +37,19 @@ export interface Emergency {
   estado?: string
   ambulancia_id?: number
 }
+
+export interface Position {
+  lat: number
+  lng: number
+}
+
+export interface Mission {
+  id: string
+  ambulance: Ambulance
+  emergency: Position
+  route: [number, number][]
+  currentIndex: number
+  color: string
+  emergenciaId: string
+  returning: boolean
+}

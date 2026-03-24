@@ -3,13 +3,14 @@ import { useTrafficLights } from '../hooks/useTraficLights'
 import { useSimulation } from '../hooks/useSimulation'
 import { useHospitals } from '../hooks/useHospitals'
 import { useAmbulances } from '../hooks/useAmbulances'
+import { useMission } from '../hooks/useMission'
 
 const Dashboard = () => {
   const { trafficLights } = useTrafficLights()
   const { hospitals } = useHospitals()
   const { ambulances } = useAmbulances(hospitals.map(h => h.id))
   const { isRunning, localStates, counters, startSimulation, stopSimulation } = useSimulation(trafficLights)
-
+  const { missions, stopAllMissions, startMission, getNearestAmbulance } = useMission(trafficLights, isRunning)
   return (
     <div className="flex h-screen bg-gray-900 text-white">
       <div className="w-64 bg-gray-800 p-4 flex flex-col gap-4 overflow-y-auto">
@@ -19,7 +20,7 @@ const Dashboard = () => {
         </div>
 
         <button
-          onClick={isRunning ? stopSimulation : startSimulation}
+          onClick={isRunning ? () => { stopSimulation(); stopAllMissions() } : startSimulation}
           className={`py-2 px-4 rounded font-bold text-sm ${isRunning ? 'bg-gray-600' : 'bg-red-600'}`}
         >
           {isRunning ? 'Detener simulacion' : 'Iniciar simulacion'}
@@ -67,7 +68,14 @@ const Dashboard = () => {
       </div>
 
       <div className="flex-1">
-        <Map localStates={localStates} counters={counters} isRunning={isRunning} />
+        <Map 
+          localStates={localStates} 
+          counters={counters} 
+          isRunning={isRunning}
+          missions={missions}
+          startMission={startMission}
+          getNearestAmbulance={getNearestAmbulance}
+        />      
       </div>
 
       <div className="w-64 bg-gray-800 p-4">

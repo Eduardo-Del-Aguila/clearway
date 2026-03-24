@@ -22,7 +22,7 @@ import L from 'leaflet'
 // import MapClickHandler from './MapClickHandler';
 import MapRightClickHandler from './MapRightClickHandler';
 import ContextMenu from './ContextMenu';
-import type { Hospital } from '../types';
+import type { Ambulance, Hospital, Mission, Position } from '../types';
 // import type { Emergency} from '../types';
 
 // Ambulancia Eduardo-SAC
@@ -79,19 +79,19 @@ interface Props {
   localStates: Record<number, string>
   counters: Record<number, number>
   isRunning: boolean
+  missions: Mission[]
+  startMission: (ambulance: Ambulance, emergency: Position, color: string, hospital: Hospital) => Promise<void>
+  getNearestAmbulance: (emergency: Position, ambulances: Ambulance[]) => Ambulance | null
 }
 
 const raidusCircle = 500
 
-const Map = ({ localStates, counters, isRunning }: Props) => {
+const Map = ({ localStates, counters, isRunning, missions, startMission, getNearestAmbulance }: Props) => {
     // hooks personalizados
     const { hospitals } = useHospitals()
     const { ambulances } = useAmbulances(hospitals.map(h => h.id))
-    const { position } = useSocket()
     const { trafficLights } = useTrafficLights()
-    // const { ambulancePosition, missionRoute, isMissionActive, startMission, getNearestAmbulance } = useMission(trafficLights)
-    const { missions, stopAllMissions, stopMission, startMission, getNearestAmbulance } = useMission(trafficLights, isRunning)
-    // const { routeCoords, calculateRoute } = useRoute()
+
     const [missionColorIndex, setMissionColorIndex] = useState(0)
     // hooks normales
     // const [emergency, setEmergency] = useState<Emergency | null>(null)
@@ -119,17 +119,17 @@ const Map = ({ localStates, counters, isRunning }: Props) => {
         alert('Inicia la simulacion mi pana')
         return
       }
-    
+      
+      console.log('Trabajando duro');
       const nearest = getNearestAmbulance({ lat, lng }, ambulances)
-    
-      if (!nearest) {
-        alert('No hay ambulancias libres disponibles')
-        return
-      }
+      if(!nearest) return;
+      const hospital = hospitals.find(el => el.id == nearest.hospital_id )
+      if(!hospital) return;
     
       const colorWalk = MISSION_COLORS[missionColorIndex % MISSION_COLORS.length]
       setMissionColorIndex(prev => prev + 1)
-      await startMission(nearest, { lat, lng }, colorWalk)
+      
+        await startMission(nearest, { lat, lng }, colorWalk, hospital )
     }
   //Funciones para aniadir elementos deseados
   const handleAddHospital = (lat: number, lng: number) => {
