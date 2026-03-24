@@ -23,6 +23,7 @@ router.post('/', async (req, res) => {
        RETURNING *`,
       [latitud, longitud, calle, estado || 'rojo', tiempo_verde || 30, tiempo_amarillo || 5, tiempo_rojo || 30]
     )
+    res.json(resultado.rows)
     res.json(resultado.rows[0])
   } catch (error) {
     res.status(500).json({ error: error.message })
@@ -39,6 +40,7 @@ router.put('/:id/emergencia', async (req, res) => {
       'UPDATE semaforos SET estado_emergencia = $1 WHERE id = $2',
       [estado_emergencia, id]
     )
+    res.json(resultado.rows)
     res.json({ mensaje: 'Estado de emergencia actualizado' })
   } catch (error) {
     res.status(500).json({ error: error.message })
@@ -54,6 +56,7 @@ router.put('/:id', async (req, res) => {
       'UPDATE semaforos SET calle = $1, tiempo_verde = $2, tiempo_amarillo = $3, tiempo_rojo = $4, estado = $5 WHERE id = $6 RETURNING *',
       [calle, tiempo_verde, tiempo_amarillo, tiempo_rojo, estado, id]
     )
+    res.json(resultado.rows)
     res.json(resultado.rows[0])
   } catch (error) {
     res.status(500).json({ error: error.message })
@@ -64,6 +67,7 @@ router.delete('/:id', async (req, res) => {
   const { id } = req.params
   try {
     await pool.query('UPDATE semaforos SET deleted_at = NOW() WHERE id = $1', [id])
+    res.json(resultado.rows)
     res.json({ mensaje: 'Semaforo eliminado' })
   } catch (error) {
     res.status(500).json({ error: error.message })

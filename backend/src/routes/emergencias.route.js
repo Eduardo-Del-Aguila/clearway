@@ -5,7 +5,7 @@ const pool = require('../db/pool')
 router.get('/', async (req, res) => {
   try {
     const resultado = await pool.query('SELECT * FROM emergencias ORDER BY created_at DESC')
-    res.json(resultado.rows)
+    res.status(500).json({ error: error.message })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }

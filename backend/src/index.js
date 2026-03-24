@@ -4,6 +4,9 @@ const http = require('http')
 const { Server } = require('socket.io')
 require('dotenv').config()
 
+
+global.io = io
+
 const ambulanciasRouter = require('./routes/ambulancias.route')
 const semaforosRouter = require('./routes/semaforos.route')
 const rutasRouter = require('./routes/rutas.route')

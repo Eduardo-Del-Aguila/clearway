@@ -70,7 +70,7 @@ export const useMission = (trafficLights: TrafficLight[], isRunning: boolean) =>
       const position = { lat: coords[index][0], lng: coords[index][1] }
       onStep(position, index)
       index++
-    }, 2000)
+    }, 1000)
   }
 
   const startMission = async (ambulance: Ambulance, emergency: Position, missionColor: string, hospital: Hospital) => {

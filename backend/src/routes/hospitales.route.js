@@ -18,6 +18,7 @@ router.post('/', async (req, res) => {
       'INSERT INTO hospitales (nombre, latitud, longitud, capacidad_ambulancias) VALUES ($1, $2, $3, $4) RETURNING *',
       [nombre, latitud, longitud, capacidad_ambulancias || 3]
     )
+    global.io.emit('hospitales:update')
     res.json(resultado.rows[0])
   } catch (error) {
     res.status(500).json({ error: error.message })
@@ -32,6 +33,7 @@ router.put('/:id', async (req, res) => {
       'UPDATE hospitales SET nombre = $1, capacidad_ambulancias = $2 WHERE id = $3 RETURNING *',
       [nombre, capacidad_ambulancias, id]
     )
+    global.io.emit('hospitales:update')
     res.json(resultado.rows[0])
   } catch (error) {
     res.status(500).json({ error: error.message })
@@ -42,6 +44,7 @@ router.delete('/:id', async (req, res) => {
   const { id } = req.params
   try {
     await pool.query('UPDATE hospitales SET deleted_at = NOW() WHERE id = $1', [id])
+    global.io.emit('hospitales:update')
     res.json({ mensaje: 'Hospital eliminado' })
   } catch (error) {
     res.status(500).json({ error: error.message })
