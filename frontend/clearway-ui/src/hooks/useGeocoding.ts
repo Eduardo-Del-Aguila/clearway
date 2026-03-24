@@ -7,6 +7,7 @@ export const useGeocoding = () => {
         `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
         { headers: { 'Accept-Language': 'es' } }
       )
+      console.log('funcionando geocoding');
 
       const road = data.address?.road || data.address?.pedestrian || data.address?.path
 

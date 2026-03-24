@@ -2,25 +2,11 @@ const express = require('express')
 const router = express.Router()
 const pool = require('../db/pool')
 
-// router.post('/location', async (req, res) => {
-//   const { id, latitud, longitud } = req.body
-
-//   try {
-//     await pool.query(
-//       'UPDATE ambulancias SET latitud = $1, longitud = $2, updated_at = NOW() WHERE id = $3',
-//       [latitud, longitud, id]
-//     )
-//     res.json({ mensaje: 'Ubicación actualizada' })
-//   } catch (error) {
-//     res.status(500).json({ error: error.message })
-//   }
-// })
-
 router.get('/hospital/:hospitalId', async (req, res) => {
   const { hospitalId } = req.params
   try {
     const resultado = await pool.query(
-      'SELECT * FROM ambulancias WHERE hospital_id = $1',
+      'SELECT * FROM ambulancias WHERE hospital_id = $1 AND deleted_at IS NULL',
       [hospitalId]
     )
     res.json(resultado.rows)
@@ -28,6 +14,7 @@ router.get('/hospital/:hospitalId', async (req, res) => {
     res.status(500).json({ error: error.message })
   }
 })
+
 
 router.post('/', async (req, res) => {
   const { nombre, placa, hospital_id, latitud, longitud } = req.body
@@ -59,12 +46,14 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   const { id } = req.params
   try {
-    await pool.query('DELETE FROM ambulancias WHERE id = $1', [id])
+    await pool.query(
+      'UPDATE ambulancias SET deleted_at = NOW() WHERE id = $1',
+      [id]
+    )
     res.json({ mensaje: 'Ambulancia eliminada' })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
 })
-
 
 module.exports = router

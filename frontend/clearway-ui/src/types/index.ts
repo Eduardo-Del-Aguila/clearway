@@ -31,6 +31,9 @@ export interface Ambulance {
 }
 
 export interface Emergency {
+  id?: number
   lat: number
   lng: number
+  estado?: string
+  ambulancia_id?: number
 }

@@ -1,9 +1,11 @@
 
 //HOOKS
 import { useState } from 'react';
-import { useRoute } from '../hooks/useRoute';
+// import { useRoute } from '../hooks/useRoute';
 import { useSocket } from '../hooks/useSocket'
 import { useTrafficLights } from '../hooks/useTraficLights';
+import { useMission, MISSION_COLORS  } from '../hooks/useMission'
+import { useAmbulances } from '../hooks/useAmbulances'
 import { useHospitals } from '../hooks/useHospitals'
 //Modals
 import AddHospitalModal from './modals/AddHospitalModal'
@@ -20,7 +22,8 @@ import L from 'leaflet'
 // import MapClickHandler from './MapClickHandler';
 import MapRightClickHandler from './MapRightClickHandler';
 import ContextMenu from './ContextMenu';
-import type { Emergency, Hospital } from '../types';
+import type { Hospital } from '../types';
+// import type { Emergency} from '../types';
 
 // Ambulancia Eduardo-SAC
 const ambulanceIcon = L.icon({
@@ -28,9 +31,10 @@ const ambulanceIcon = L.icon({
     iconSize: [40, 40],
 })
 
+//Hopital Eduardo SAC
 const hospitalIcon = L.icon({
   iconUrl: 'https://cdn-icons-png.flaticon.com/512/619/619153.png',
-  iconSize: [36, 36],
+  iconSize: [60, 60],
 })
 
 // merry chismas
@@ -74,18 +78,23 @@ interface ContextMenuState {
 interface Props {
   localStates: Record<number, string>
   counters: Record<number, number>
+  isRunning: boolean
 }
 
-const raidusCircle = 1500
+const raidusCircle = 500
 
-const Map = ({ localStates, counters }: Props) => {
+const Map = ({ localStates, counters, isRunning }: Props) => {
     // hooks personalizados
     const { hospitals } = useHospitals()
+    const { ambulances } = useAmbulances(hospitals.map(h => h.id))
     const { position } = useSocket()
     const { trafficLights } = useTrafficLights()
-    const { routeCoords, calculateRoute } = useRoute()
+    // const { ambulancePosition, missionRoute, isMissionActive, startMission, getNearestAmbulance } = useMission(trafficLights)
+    const { missions, stopAllMissions, stopMission, startMission, getNearestAmbulance } = useMission(trafficLights, isRunning)
+    // const { routeCoords, calculateRoute } = useRoute()
+    const [missionColorIndex, setMissionColorIndex] = useState(0)
     // hooks normales
-    const [emergency, setEmergency] = useState<Emergency | null>(null)
+    // const [emergency, setEmergency] = useState<Emergency | null>(null)
     const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
     //Mis modales
     const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null)
@@ -101,22 +110,27 @@ const Map = ({ localStates, counters }: Props) => {
         setContextMenu(null);
       }
     }
-
-
-    // const handleMapClick = (lat: number, lng: number) => {setEmergency({lat, lng}) if (position) { calculateRoute({ lat: position.latitude, lng: position.longitude }, { lat, lng })}}
-  const handleRightClick = (lat: number, lng: number, x: number, y: number) => {
+  
+    const handleRightClick = (lat: number, lng: number, x: number, y: number) => {
     setContextMenu({ lat, lng, x, y })
-  }
-  const handleAddEmergency = (lat: number, lng: number) => {
-    setEmergency({ lat, lng })
-    if (position) {
-      calculateRoute(
-        { lat: position.latitud, lng: position.longitud },
-        { lat, lng }
-      )
     }
-  }
-
+    const handleAddEmergency = async (lat: number, lng: number) => {
+      if (!isRunning) {
+        alert('Inicia la simulacion mi pana')
+        return
+      }
+    
+      const nearest = getNearestAmbulance({ lat, lng }, ambulances)
+    
+      if (!nearest) {
+        alert('No hay ambulancias libres disponibles')
+        return
+      }
+    
+      const colorWalk = MISSION_COLORS[missionColorIndex % MISSION_COLORS.length]
+      setMissionColorIndex(prev => prev + 1)
+      await startMission(nearest, { lat, lng }, colorWalk)
+    }
   //Funciones para aniadir elementos deseados
   const handleAddHospital = (lat: number, lng: number) => {
     setShowHospitalModal({ lat, lng })
@@ -137,6 +151,9 @@ const Map = ({ localStates, counters }: Props) => {
         onKeyDown={handleKeyDown}
         onClick={ () => setContextMenu(null)}
       >
+        {/* ------------------------------ */}
+        {/* ------ INICIO DEL MAPA ------- */}
+        {/* ------------------------------ */}
         <MapContainer
           center={[-12.0464, -77.0428]}
           zoom={13}
@@ -147,28 +164,18 @@ const Map = ({ localStates, counters }: Props) => {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution="OpenStreetMap"
           />
-            {/* <MapClickHandler onMapClick={handleMapClick} /> */}
 
             <MapRightClickHandler onRightClick={handleRightClick}/>
 
-            {/* INICIO SECCION DE AMBULANCIA */}
-            {position && (
-              <Marker
-                position={[position.latitud, position.longitud]}
-                icon={ambulanceIcon}
-              >
-                <Tooltip>Ambulancia A-01</Tooltip>
-              </Marker>
-            )}
             {/* INICIO DE PUNTO DE EMERGENCIA */}
-            {emergency && (
+            {/* {emergency && (
               <Marker
                 position={[emergency.lat, emergency.lng]}
                 icon={emergencyIcon}
               >
                 <Tooltip>Punto de emergencia</Tooltip>
               </Marker>
-            )}
+            )} */}
 
             {/* FIN DE PUNTO DE EMERGENCIA */}
 
@@ -199,13 +206,9 @@ const Map = ({ localStates, counters }: Props) => {
               </Tooltip>
               </Marker>
             ))}
-            {routeCoords.length > 0 && (
-              <Polyline
-                positions={routeCoords}
-                color="#ef4444"
-                weight={4}
-              />
-            )}
+          
+
+            {/* Hospitales */}
             {hospitals.map((hospital) => (
             <Marker
               key={hospital.id}
@@ -234,8 +237,53 @@ const Map = ({ localStates, counters }: Props) => {
               pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.1 }}
             />
           )}
+          {/* Calculamos nuestra ambulancia dentro de cada hospital */}
 
+          
+          {missions.map((mission) => (
+            <>
+              <Marker
+                key={`amb_${mission.id}`}
+                position={mission.route[mission.currentIndex] || [mission.ambulance.latitud, mission.ambulance.longitud]}
+                icon={ambulanceIcon}
+              >
+                <Tooltip>{mission.ambulance.nombre} — en mision</Tooltip>
+              </Marker>
+          
+              <Polyline
+                key={`route_${mission.id}`}
+                positions={mission.route}
+                color={mission.color}
+                weight={4}
+              />
+
+              <Marker
+                key={`emerg_${mission.id}`}
+                position={[mission.emergency.lat, mission.emergency.lng]}
+                icon={emergencyIcon}
+              >
+                <Tooltip>Emergencia — {mission.ambulance.nombre}</Tooltip>
+              </Marker>
+            </>
+          ))}
+
+          {ambulances
+            .filter(amb => !missions.find(m => m.ambulance.id === amb.id))
+            .map(amb => amb.latitud && amb.longitud ? (
+              <Marker
+                key={amb.id}
+                position={[amb.latitud, amb.longitud]}
+                icon={ambulanceIcon}
+              >
+                <Tooltip>{amb.nombre} — {amb.estado}</Tooltip>
+              </Marker>
+            ) : null)
+          }
         </MapContainer>
+        {/* ------------------------------ */}
+        {/* ------ FIN DEL MAPA ------- */}
+        {/* ------------------------------ */}
+
         {contextMenu && (
           <ContextMenu
             x={contextMenu.x}
@@ -249,8 +297,6 @@ const Map = ({ localStates, counters }: Props) => {
             onClose={() => setContextMenu(null)}
           />
         )}
-
-
         {/* INICIO DE MODALES */}
         {/* MODAL HOSPITAL */}
         {hospitalDetail && (
@@ -290,8 +336,8 @@ const Map = ({ localStates, counters }: Props) => {
           />
         )}
         {/* FIN DE MODALES */}
-        </div>
-    )
+        </div>)
+
 }
 
 export default Map

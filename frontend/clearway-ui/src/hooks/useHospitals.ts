@@ -8,6 +8,7 @@ export const useHospitals = () => {
   useEffect(() => {
     const fetchHospitals = async () => {
       const { data } = await axios.get('http://localhost:3001/api/hospitales')
+      console.log('Funcionado');
       setHospitals(data)
     }
 

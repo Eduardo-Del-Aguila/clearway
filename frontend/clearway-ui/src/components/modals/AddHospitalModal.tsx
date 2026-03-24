@@ -10,7 +10,7 @@ interface Props {
   existingHospitals: Hospital[]
 }
 
-const radiusCircle = 1500
+const radiusCircle = 500
 
 const AddHospitalModal = ({ lat, lng, onClose, onSuccess, existingHospitals }: Props) => {
   const [nombre, setNombre] = useState('')

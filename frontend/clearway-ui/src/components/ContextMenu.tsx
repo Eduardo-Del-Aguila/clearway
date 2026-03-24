@@ -11,25 +11,27 @@ interface Props {
   onClose: () => void
 }
 
-const ContextMenu = ({ x, y, lat, lng, onAddHospital, onAddAmbulance, onAddTrafficLight, onAddEmergency, onClose }: Props) => {
+const ContextMenu = ({ x, y, lat, lng, onAddHospital, onAddTrafficLight, onAddEmergency, onClose }: Props) => {
   const options = [
-    { label: 'Agregar hospital', action: () => onAddHospital(lat, lng) },
-    { label: 'Agregar ambulancia', action: () => onAddAmbulance(lat, lng) },
-    { label: 'Agregar semaforo', action: () => onAddTrafficLight(lat, lng) },
     { label: 'Agregar punto de emergencia', action: () => onAddEmergency(lat, lng) },
+    { label: 'Agregar hospital', action: () => onAddHospital(lat, lng) },
+    // { label: 'Agregar ambulancia', action: () => onAddAmbulance(lat, lng) },
+    { label: 'Agregar semaforo', action: () => onAddTrafficLight(lat, lng) },
   ]
 
 
   return (
     <div
       style={{ top: y, left: x }}
-      className="max-w-70 absolute z-[1000] bg-gray-800 border border-gray-600 rounded-lg shadow-lg py-1 min-w-48"
+      className="max-w-70 absolute z-1000 bg-gray-800 border border-gray-600 rounded-lg shadow-lg pb-1 overflow-hidden min-w-48"
     >
-      {options.map((option) => (
+      {options.map((option, index) => (
         <button
           key={option.label}
           onClick={() => { option.action(); onClose() }}
-          className="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700"
+          className={`w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700 ${
+            index === 0 ? 'bg-red-400 hover:bg-red-400' : ''
+          }`}
         >
           {option.label}
         </button>

@@ -29,7 +29,7 @@ const Dashboard = () => {
           <p className="text-sm text-gray-400 mb-2">Semaforos: {trafficLights.length}</p>
           {trafficLights.map(tl => (
             <div key={tl.id} className="flex items-center gap-2 mb-1">
-              <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+              <div className={`w-3 h-3 rounded-full shrink-0 ${
                 (localStates[tl.id] || tl.estado) === 'verde' ? 'bg-green-500' :
                 (localStates[tl.id] || tl.estado) === 'amarillo' ? 'bg-yellow-400' : 'bg-red-500'
               }`} />
@@ -45,7 +45,7 @@ const Dashboard = () => {
             return (
               <div key={hospital.id} className="mb-3 bg-gray-700 rounded p-2">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-500 flex-shrink-0" />
+                  <div className="w-3 h-3 rounded-full bg-blue-500 shrink-0" />
                   <span className="text-xs font-bold text-white truncate">{hospital.nombre}</span>
                 </div>
                 {hospitalAmbulances.length === 0 ? (
@@ -67,7 +67,7 @@ const Dashboard = () => {
       </div>
 
       <div className="flex-1">
-        <Map localStates={localStates} counters={counters} />
+        <Map localStates={localStates} counters={counters} isRunning={isRunning} />
       </div>
 
       <div className="w-64 bg-gray-800 p-4">

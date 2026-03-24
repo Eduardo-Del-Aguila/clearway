@@ -4,12 +4,13 @@ const pool = require('../db/pool')
 
 router.get('/', async (req, res) => {
   try {
-    const resultado = await pool.query('SELECT * FROM semaforos')
+    const resultado = await pool.query('SELECT * FROM semaforos WHERE deleted_at IS NULL')
     res.json(resultado.rows)
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
 })
+
 
 //Creamos nuestros semaforos
 router.post('/', async (req, res) => {
@@ -59,11 +60,10 @@ router.put('/:id', async (req, res) => {
   }
 })
 
-//Deprecamos a mi hermano semáforo
 router.delete('/:id', async (req, res) => {
   const { id } = req.params
   try {
-    await pool.query('DELETE FROM semaforos WHERE id = $1', [id])
+    await pool.query('UPDATE semaforos SET deleted_at = NOW() WHERE id = $1', [id])
     res.json({ mensaje: 'Semaforo eliminado' })
   } catch (error) {
     res.status(500).json({ error: error.message })

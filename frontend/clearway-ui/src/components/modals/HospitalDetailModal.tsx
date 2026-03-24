@@ -31,6 +31,7 @@ const HospitalDetailModal = ({ hospital, onClose, onEdit }: Props) => {
 
     const fetchAmbulances = async () => {
       const { data } = await axios.get(`http://localhost:3001/api/ambulancias/hospital/${hospital.id}`)
+      console.log('funcioanandoDetail');
       setAmbulances(data)
     }
 
