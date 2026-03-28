@@ -4,13 +4,16 @@ import { useSimulation } from '../hooks/useSimulation'
 import { useHospitals } from '../hooks/useHospitals'
 import { useAmbulances } from '../hooks/useAmbulances'
 import { useMission } from '../hooks/useMission'
+import { useState } from 'react'
 
 const Dashboard = () => {
   const { trafficLights } = useTrafficLights()
   const { hospitals } = useHospitals()
   const { ambulances } = useAmbulances(hospitals.map(h => h.id))
   const { isRunning, localStates, counters, startSimulation, stopSimulation } = useSimulation(trafficLights)
-  const { missions, stopAllMissions, startMission, getNearestAmbulance } = useMission(trafficLights, isRunning)
+  const [protocolActive, setProtocolActive] = useState(false)
+  const { missions, emergencyStates, stopAllMissions, startMission, getNearestAmbulance,  } = useMission(trafficLights, isRunning, protocolActive)
+  
   return (
     <div className="flex h-screen bg-gray-900 text-white">
       <div className="w-64 bg-gray-800 p-4 flex flex-col gap-4 overflow-y-auto">
@@ -25,7 +28,17 @@ const Dashboard = () => {
         >
           {isRunning ? 'Detener simulacion' : 'Iniciar simulacion'}
         </button>
-
+        
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-400">Protocolo emergencia</span>
+          <button
+            onClick={() => setProtocolActive(prev => !prev)}
+            className={`relative w-12 h-6 rounded-full transition-colors ${protocolActive ? 'bg-red-600' : 'bg-gray-600'}`}
+          >
+            <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${protocolActive ? 'left-7' : 'left-1'}`} />
+          </button>
+        </div>
+        
         <div>
           <p className="text-sm text-gray-400 mb-2">Semaforos: {trafficLights.length}</p>
           {trafficLights.map(tl => (
@@ -67,18 +80,38 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1 relative overflow-hidden"> 
+
+        <div className='absolute top-0 left-0 w-full z-1000'>
+          <div className='relative group h-20 flex justify-center items-center'>
+
+            <div className="flex h-10 justify-center items-center absolute z-1100 bg-red-600/60 group-hover:bg-red-600 
+                            rounded-lg backdrop-blur-sm
+                            transition-all duration-500 ease-in-out
+                            w-10 group-hover:w-[70%] "> 
+                            <span className='text-center group-hover:hidden'>...</span>
+              <ul className="hidden group-hover:flex gap-4 p-4 items-center justify-center w-full">
+                <li className="cursor-pointer hover:text-red-400">Opcióni</li>
+                <li className="cursor-pointer hover:text-red-400">Opcióni</li>
+                <li className="cursor-pointer hover:text-red-400">Opcióni</li>
+              </ul> 
+            </div>
+
+          </div>
+        </div>
         <Map 
           localStates={localStates} 
+          emergencyStates={emergencyStates}
           counters={counters} 
           isRunning={isRunning}
           missions={missions}
           startMission={startMission}
           getNearestAmbulance={getNearestAmbulance}
-        />      
+          protocolActive={protocolActive}
+        />  
       </div>
 
-      <div className="w-64 bg-gray-800 p-4">
+      <div className="flex flex-col w-64 bg-gray-800 p-4">
         <h2 className="text-lg font-bold mb-4">Emergencia activa</h2>
         <p className="text-gray-400 text-sm">Sin emergencias</p>
       </div>

@@ -53,7 +53,7 @@ const AddHospitalModal = ({ lat, lng, onClose, onSuccess, existingHospitals }: P
   }
 
   return (
-    <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-black/50">
+    <div className="absolute inset-0 z-2000 flex items-center justify-center bg-black/50">
       <div className="bg-gray-800 rounded-lg p-6 w-80 text-white">
         <h2 className="text-lg font-bold mb-4">Agregar hospital</h2>
         <div className="flex flex-col gap-3">

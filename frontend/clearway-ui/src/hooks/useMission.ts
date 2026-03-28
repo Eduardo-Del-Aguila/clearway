@@ -4,24 +4,30 @@ import type { Ambulance, Hospital, Mission, Position, TrafficLight } from '../ty
 
 export const MISSION_COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#a855f7']
 
-export const useMission = (trafficLights: TrafficLight[], isRunning: boolean) => {
+export const useMission = (trafficLights: TrafficLight[], isRunning: boolean, protocolActive: boolean) => {
   const [missions, setMissions] = useState<Mission[]>([])
   const intervalsRef = useRef<Record<string, ReturnType<typeof setInterval>>>({})
+  const protocolRef = useRef(protocolActive)
+  const trafficLightsRef = useRef(trafficLights)
+  const [emergencyStates, setEmergencyStates] = useState<Record<number, string>>({})
+
+  protocolRef.current = protocolActive
+  trafficLightsRef.current = trafficLights
 
   const getDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
     const R = 6371000
     const dLat = (lat2 - lat1) * Math.PI / 180
     const dLng = (lng2 - lng1) * Math.PI / 180
-    const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng/2) ** 2
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
   }
 
   const getNearestAmbulance = (emergency: Position, ambulances: Ambulance[]): Ambulance | null => {
     const free = ambulances.filter(a => a.estado === 'libre' && a.latitud && a.longitud)
-    if (free.length === 0){
-        alert('No quedan ambulancias disponibles');
-        return null
-    } 
+    if (free.length === 0) {
+      alert('No quedan ambulancias disponibles')
+      return null
+    }
     return free.reduce((nearest, current) => {
       const distCurrent = getDistance(emergency.lat, emergency.lng, current.latitud, current.longitud)
       const distNearest = getDistance(emergency.lat, emergency.lng, nearest.latitud, nearest.longitud)
@@ -30,27 +36,33 @@ export const useMission = (trafficLights: TrafficLight[], isRunning: boolean) =>
   }
 
   const checkTrafficLights = async (position: Position, remainingRoute: [number, number][]) => {
-    const speedMs = 60000 / 3600
-    let accumulatedDistance = 0
+    const currentLights = trafficLightsRef.current
+    const updates: Record<number, string> = {}
 
-    for (const tl of trafficLights) {
-      for (let i = 1; i < remainingRoute.length; i++) {
-        accumulatedDistance += getDistance(remainingRoute[i-1][0], remainingRoute[i-1][1], remainingRoute[i][0], remainingRoute[i][1])
-        const distToTl = getDistance(remainingRoute[i][0], remainingRoute[i][1], tl.latitud, tl.longitud)
-        if (distToTl < 50) {
-          const estimatedSeconds = accumulatedDistance / speedMs
-          if (estimatedSeconds <= 120 && tl.estado_emergencia === 'apagado') {
-            await axios.put(`http://localhost:3001/api/semaforos/${tl.id}/emergencia`, { estado_emergencia: 'verde' })
-          }
-          break
-        }
-      }
+    for (const tl of currentLights) {
+      const isOnRoute = remainingRoute.some(coord =>
+        getDistance(coord[0], coord[1], tl.latitud, tl.longitud) < 80
+      )
+      if (!isOnRoute) continue
 
       const distToAmbulance = getDistance(position.lat, position.lng, tl.latitud, tl.longitud)
-      if (distToAmbulance > 10 && tl.estado_emergencia !== 'apagado') {
-        await axios.put(`http://localhost:3001/api/semaforos/${tl.id}/emergencia`, { estado_emergencia: 'apagado' })
+
+      if (distToAmbulance <= 200) {
+        updates[tl.id] = 'verde'
+      } else {
+        updates[tl.id] = 'apagado'
       }
     }
+
+    setEmergencyStates(prev => ({ ...prev, ...updates }))
+  }
+
+  const isBlockedByRed = (position: Position): boolean => {
+    const currentLights = trafficLightsRef.current
+    return currentLights.some(tl => {
+      const dist = getDistance(position.lat, position.lng, tl.latitud, tl.longitud)
+      return dist < 40 && tl.estado === 'rojo'
+    })
   }
 
   const driveRoute = (
@@ -60,17 +72,31 @@ export const useMission = (trafficLights: TrafficLight[], isRunning: boolean) =>
     onComplete: () => void
   ) => {
     let index = 0
-    intervalsRef.current[missionId] = setInterval(() => {
+
+    const tick = async () => {
       if (index >= coords.length) {
         clearInterval(intervalsRef.current[missionId])
         delete intervalsRef.current[missionId]
         onComplete()
         return
       }
+
       const position = { lat: coords[index][0], lng: coords[index][1] }
+
+      if (!protocolRef.current && isBlockedByRed(position)) {
+        return
+      }
+
       onStep(position, index)
+
+      if (protocolRef.current) {
+        await checkTrafficLights(position, coords.slice(index))
+      }
+
       index++
-    }, 1000)
+    }
+
+    intervalsRef.current[missionId] = setInterval(tick, 500)
   }
 
   const startMission = async (ambulance: Ambulance, emergency: Position, missionColor: string, hospital: Hospital) => {
@@ -121,9 +147,8 @@ export const useMission = (trafficLights: TrafficLight[], isRunning: boolean) =>
     driveRoute(
       missionId,
       outboundCoords,
-      async (position, index) => {
+      (_position, index) => {
         setMissions(prev => prev.map(m => m.id === missionId ? { ...m, currentIndex: index } : m))
-        await checkTrafficLights(position, outboundCoords.slice(index))
       },
       async () => {
         await axios.put(`http://localhost:3001/api/emergencias/${emergenciaRes.data.id}/atendida`)
@@ -162,24 +187,24 @@ export const useMission = (trafficLights: TrafficLight[], isRunning: boolean) =>
     setMissions(prev => prev.filter(m => m.id !== missionId))
   }
 
-    const stopAllMissions = async () => {
-      Object.values(intervalsRef.current).forEach(clearInterval)
-      intervalsRef.current = {}
-    
-      for (const mission of missions) {
-        await axios.put(`http://localhost:3001/api/ambulancias/${mission.ambulance.id}`, {
-          nombre: mission.ambulance.nombre,
-          placa: mission.ambulance.placa,
-          estado: 'libre'
-        })
-    
-        if (!mission.returning) {
-          await axios.put(`http://localhost:3001/api/emergencias/${mission.emergenciaId}/cancelar`)
-        }
-      }
-  
-      setMissions([])
-    }
+const stopAllMissions = async () => {
+  Object.values(intervalsRef.current).forEach(clearInterval)
+  intervalsRef.current = {}
+  setEmergencyStates({})
 
-  return { missions, startMission, stopMission, stopAllMissions, getNearestAmbulance }
+  for (const mission of missions) {
+    await axios.put(`http://localhost:3001/api/ambulancias/${mission.ambulance.id}`, {
+      nombre: mission.ambulance.nombre,
+      placa: mission.ambulance.placa,
+      estado: 'libre'
+    })
+    if (!mission.returning) {
+      await axios.put(`http://localhost:3001/api/emergencias/${mission.emergenciaId}/cancelar`)
+    }
+  }
+
+  setMissions([])
+}
+
+  return { missions, emergencyStates, startMission, stopMission, stopAllMissions, getNearestAmbulance }
 }

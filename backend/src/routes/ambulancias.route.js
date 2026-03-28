@@ -23,10 +23,10 @@ router.post('/', async (req, res) => {
       'INSERT INTO ambulancias (nombre, placa, hospital_id, latitud, longitud) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [nombre, placa, hospital_id, latitud, longitud]
     )
-    res.status(500).json({ error: error.message })
+    global.io.emit('ambulancias:update')
     res.json(resultado.rows[0])
   } catch (error) {
-    global.io.emit('hospitales:update')
+    res.status(500).json({ error: error.message })
   }
 })
 
@@ -38,7 +38,7 @@ router.put('/:id', async (req, res) => {
       'UPDATE ambulancias SET nombre = $1, placa = $2, estado = $3 WHERE id = $4 RETURNING *',
       [nombre, placa, estado, id]
     )
-    global.io.emit('hospitales:update')
+    global.io.emit('ambulancias:update')
     res.json(resultado.rows[0])
   } catch (error) {
     res.status(500).json({ error: error.message })
@@ -52,7 +52,7 @@ router.delete('/:id', async (req, res) => {
       'UPDATE ambulancias SET deleted_at = NOW() WHERE id = $1',
       [id]
     )
-    res.status(500).json({ error: error.message })
+    global.io.emit('ambulancias:update')
     res.json({ mensaje: 'Ambulancia eliminada' })
   } catch (error) {
     res.status(500).json({ error: error.message })

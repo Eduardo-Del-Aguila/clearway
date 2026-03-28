@@ -59,7 +59,7 @@ const AddTrafficLightModal = ({ lat, lng, onClose, onSuccess }: Props) => {
   }
 
   return (
-    <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-black/50">
+    <div className="absolute inset-0 z-2000 flex items-center justify-center bg-black/50">
       <div className="bg-gray-800 rounded-lg p-6 w-80 text-white">
         <h2 className="text-lg font-bold mb-4">Agregar semaforo</h2>
 

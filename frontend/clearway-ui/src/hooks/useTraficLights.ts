@@ -1,21 +1,23 @@
 import { useEffect, useState } from 'react'
+import { io } from 'socket.io-client'
 import axios from 'axios'
 import type { TrafficLight } from '../types'
 
+const socket = io('http://localhost:3001')
 
 export const useTrafficLights = () => {
   const [trafficLights, setTrafficLights] = useState<TrafficLight[]>([])
 
-  useEffect(() => {
-    const fetchTrafficLights = async () => {
+  const fetchTrafficLights = async () => {
     const { data } = await axios.get('http://localhost:3001/api/semaforos')
-      setTrafficLights(data)
-    }
+    setTrafficLights(data)
+  }
 
+  useEffect(() => {
     fetchTrafficLights()
-    const interval = setInterval(fetchTrafficLights, 3000)
 
-    return () => clearInterval(interval)
+    socket.on('semaforos:update', fetchTrafficLights)
+    return () => { socket.off('semaforos:update') }
   }, [])
 
   return { trafficLights }

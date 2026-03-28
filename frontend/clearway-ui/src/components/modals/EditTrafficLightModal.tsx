@@ -48,7 +48,7 @@ const EditTrafficLightModal = ({ trafficLight, onClose, onSuccess }: Props) => {
   }
 
   return (
-    <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-black/50">
+    <div className="absolute inset-0 z-2000 flex items-center justify-center bg-black/50">
       <div className="bg-gray-800 rounded-lg p-6 w-80 text-white">
         <h2 className="text-lg font-bold mb-4">Editar semaforo</h2>
         <div className="flex flex-col gap-3">
@@ -82,7 +82,6 @@ const EditTrafficLightModal = ({ trafficLight, onClose, onSuccess }: Props) => {
             className="w-full mt-1 bg-gray-700 rounded px-3 py-2 text-sm"
           >
             <option value="rojo">Rojo</option>
-            <option value="amarillo">Amarillo</option>
             <option value="verde">Verde</option>
           </select>
         </div>

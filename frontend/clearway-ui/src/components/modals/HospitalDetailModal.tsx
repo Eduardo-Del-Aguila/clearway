@@ -31,7 +31,7 @@ const HospitalDetailModal = ({ hospital, onClose, onEdit }: Props) => {
 
     const fetchAmbulances = async () => {
       const { data } = await axios.get(`http://localhost:3001/api/ambulancias/hospital/${hospital.id}`)
-      console.log('funcioanandoDetail');
+      console.log('funcioanandoDetail');  
       setAmbulances(data)
     }
 
@@ -39,7 +39,7 @@ const HospitalDetailModal = ({ hospital, onClose, onEdit }: Props) => {
       fetchAmbulances()
     }, [hospital.id])
     
-    //CRUD AMBULANCIAS
+
     const handleEditAmbulance = async (id: number) => {
       try {
         await axios.put(`http://localhost:3001/api/ambulancias/${id}`, {
