@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useGeocoding } from '../../hooks/useGeocoding'
 
+const API_URL = import.meta.env.VITE_URL_API
+
 interface Props {
   lat: number
   lng: number
@@ -40,7 +42,7 @@ const AddTrafficLightModal = ({ lat, lng, onClose, onSuccess }: Props) => {
     if (!calle) return
     setLoading(true)
     try {
-    await axios.post('http://localhost:3001/api/semaforos', {
+    await axios.post(`${API_URL}/semaforos`, {
       latitud: lat,
       longitud: lng,
       calle,

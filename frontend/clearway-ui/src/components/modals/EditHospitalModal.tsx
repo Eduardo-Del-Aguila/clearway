@@ -16,7 +16,7 @@ const EditHospitalModal = ({ hospital, onClose, onSuccess }: Props) => {
   const handleSubmit = async () => {
     setLoading(true)
     try {
-      await axios.put(`http://localhost:3001/api/hospitales/${hospital.id}`, {
+      await axios.put(`${API_URL}/hospitales/${hospital.id}`, {
         nombre,
         capacidad_ambulancias: capacidad
       })
@@ -32,7 +32,7 @@ const EditHospitalModal = ({ hospital, onClose, onSuccess }: Props) => {
   const handleDelete = async () => {
     if (!confirm('Estas seguro de eliminar este hospital?')) return
     try {
-      await axios.delete(`http://localhost:3001/api/hospitales/${hospital.id}`)
+      await axios.delete(`${API_URL}/hospitales/${hospital.id}`)
       onSuccess()
       onClose()
     } catch (error) {

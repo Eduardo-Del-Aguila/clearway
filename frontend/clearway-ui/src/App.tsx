@@ -11,12 +11,17 @@ const router = createBrowserRouter([
   {
     path: "/dashboard",
     element: <Dashboard />,
+    
   },
 ]);
 
 function App() {
   return (
-  <RouterProvider router={router} />
+    <div>
+      
+      <RouterProvider router={router} />
+    </div>
+  // <Dashboard/>
 )
 }
 

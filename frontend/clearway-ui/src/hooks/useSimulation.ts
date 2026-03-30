@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import type { TrafficLight } from '../types'
+const API_URL = import.meta.env.VITE_URL_API
 
 export const useSimulation = (trafficLights: TrafficLight[]) => {
   const [isRunning, setIsRunning] = useState(false)
@@ -24,19 +25,19 @@ export const useSimulation = (trafficLights: TrafficLight[]) => {
 
     const tick = (currentState: string) => {
       setLocalStates(prev => ({ ...prev, [tl.id]: currentState }))
-      
+
       let remaining = durations[currentState]
       setCounters(prev => ({ ...prev, [tl.id]: remaining }))
 
       if (intervalsRef.current[tl.id]) clearInterval(intervalsRef.current[tl.id])
-      
+
       intervalsRef.current[tl.id] = setInterval(() => {
         remaining--
         setCounters(prev => ({ ...prev, [tl.id]: remaining }))
         if (remaining <= 0) clearInterval(intervalsRef.current[tl.id])
       }, 1000)
 
-      axios.put(`http://localhost:3001/api/semaforos/${tl.id}`, {
+      axios.put(`${API_URL}/semaforos/${tl.id}`, {
         calle: tl.calle,
         tiempo_verde: tl.tiempo_verde,
         tiempo_amarillo: tl.tiempo_amarillo,

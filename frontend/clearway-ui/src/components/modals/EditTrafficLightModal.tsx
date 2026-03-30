@@ -20,7 +20,7 @@ const EditTrafficLightModal = ({ trafficLight, onClose, onSuccess }: Props) => {
   const handleSubmit = async () => {
     setLoading(true)
     try {
-      await axios.put(`http://localhost:3001/api/semaforos/${trafficLight.id}`, {
+      await axios.put(`${API_URL}/semaforos/${trafficLight.id}`, {
         calle,
         tiempo_verde: tiempoVerde,
         tiempo_amarillo: tiempoAmarillo,
@@ -39,7 +39,7 @@ const EditTrafficLightModal = ({ trafficLight, onClose, onSuccess }: Props) => {
   const handleDelete = async () => {
     if (!confirm('Estas seguro de eliminar este semaforo?')) return
     try {
-      await axios.delete(`http://localhost:3001/api/semaforos/${trafficLight.id}`)
+      await axios.delete(`${API_URL}/semaforos/${trafficLight.id}`)
       onSuccess()
       onClose()
     } catch (error) {

@@ -11,6 +11,8 @@ interface Props {
 }
 
 const radiusCircle = 500
+const API_URL = import.meta.env.VITE_URL_API
+
 
 const AddHospitalModal = ({ lat, lng, onClose, onSuccess, existingHospitals }: Props) => {
   const [nombre, setNombre] = useState('')
@@ -35,7 +37,7 @@ const AddHospitalModal = ({ lat, lng, onClose, onSuccess, existingHospitals }: P
     }
 
     try {
-      await axios.post('http://localhost:3001/api/hospitales', {
+      await axios.post(`${API_URL}/hospitales`, {
         nombre,
         latitud: lat,
         longitud: lng,

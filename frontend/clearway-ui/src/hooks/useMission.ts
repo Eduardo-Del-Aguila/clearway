@@ -4,6 +4,8 @@ import type { Ambulance, Hospital, Mission, Position, TrafficLight } from '../ty
 
 export const MISSION_COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#a855f7']
 
+const API_URL = import.meta.env.VITE_URL_API
+
 export const useMission = (trafficLights: TrafficLight[], isRunning: boolean, protocolActive: boolean) => {
   const [missions, setMissions] = useState<Mission[]>([])
   const intervalsRef = useRef<Record<string, ReturnType<typeof setInterval>>>({})
@@ -23,7 +25,9 @@ export const useMission = (trafficLights: TrafficLight[], isRunning: boolean, pr
   }
 
   const getNearestAmbulance = (emergency: Position, ambulances: Ambulance[]): Ambulance | null => {
-    const free = ambulances.filter(a => a.estado === 'libre' && a.latitud && a.longitud)
+    console.log('Sacamos comclusiones: ', ambulances);
+    const free = ambulances.filter(a => (a.estado === 'libre') && (a.latitud) && (a.longitud))
+    console.log('Depues del filtro', free);
     if (free.length === 0) {
       alert('No quedan ambulancias disponibles')
       return null
@@ -84,6 +88,7 @@ export const useMission = (trafficLights: TrafficLight[], isRunning: boolean, pr
       const position = { lat: coords[index][0], lng: coords[index][1] }
 
       if (!protocolRef.current && isBlockedByRed(position)) {
+
         return
       }
 
@@ -99,33 +104,46 @@ export const useMission = (trafficLights: TrafficLight[], isRunning: boolean, pr
     intervalsRef.current[missionId] = setInterval(tick, 500)
   }
 
+  const fetchRouteWithRetry = async (url: string, retries = 3): Promise<any> => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const { data } = await axios.get(url, { timeout: 10000 })
+        return data
+      } catch (error) {
+        if (i === retries - 1) throw error
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)))
+      }
+    }
+  }
+
+
   const startMission = async (ambulance: Ambulance, emergency: Position, missionColor: string, hospital: Hospital) => {
     if (!isRunning) {
       alert('Inicia la simulacion antes de agregar una emergencia')
       return
     }
 
-    const outboundData = await axios.get(
+    const outboundData = await fetchRouteWithRetry(
       `https://router.project-osrm.org/route/v1/driving/${ambulance.longitud},${ambulance.latitud};${emergency.lng},${emergency.lat}?overview=full&geometries=geojson`
     )
-    const outboundCoords: [number, number][] = outboundData.data.routes[0].geometry.coordinates.map(
+    const outboundCoords: [number, number][] = outboundData.routes[0].geometry.coordinates.map(
       ([lng, lat]: [number, number]) => [lat, lng]
     )
 
-    const returnData = await axios.get(
+    const returnData = await fetchRouteWithRetry(
       `https://router.project-osrm.org/route/v1/driving/${emergency.lng},${emergency.lat};${hospital.longitud},${hospital.latitud}?overview=full&geometries=geojson`
     )
-    const returnCoords: [number, number][] = returnData.data.routes[0].geometry.coordinates.map(
+    const returnCoords: [number, number][] = returnData.routes[0].geometry.coordinates.map(
       ([lng, lat]: [number, number]) => [lat, lng]
     )
 
-    await axios.put(`http://localhost:3001/api/ambulancias/${ambulance.id}`, {
+    await axios.put(`${API_URL}/ambulancias/${ambulance.id}`, {
       nombre: ambulance.nombre,
       placa: ambulance.placa,
       estado: 'en_ruta'
     })
 
-    const emergenciaRes = await axios.post('http://localhost:3001/api/emergencias', {
+    const emergenciaRes = await axios.post(`${API_URL}/emergencias`, {
       latitud: emergency.lat,
       longitud: emergency.lng,
       ambulancia_id: ambulance.id
@@ -151,7 +169,7 @@ export const useMission = (trafficLights: TrafficLight[], isRunning: boolean, pr
         setMissions(prev => prev.map(m => m.id === missionId ? { ...m, currentIndex: index } : m))
       },
       async () => {
-        await axios.put(`http://localhost:3001/api/emergencias/${emergenciaRes.data.id}/atendida`)
+        await axios.put(`${API_URL}/emergencias/${emergenciaRes.data.id}/atendida`)
 
         setMissions(prev => prev.map(m => m.id === missionId ? {
           ...m,
@@ -167,7 +185,7 @@ export const useMission = (trafficLights: TrafficLight[], isRunning: boolean, pr
             setMissions(prev => prev.map(m => m.id === missionId ? { ...m, currentIndex: index } : m))
           },
           async () => {
-            await axios.put(`http://localhost:3001/api/ambulancias/${ambulance.id}`, {
+            await axios.put(`${API_URL}/ambulancias/${ambulance.id}`, {
               nombre: ambulance.nombre,
               placa: ambulance.placa,
               estado: 'libre'
@@ -180,6 +198,7 @@ export const useMission = (trafficLights: TrafficLight[], isRunning: boolean, pr
   }
 
   const stopMission = (missionId: string) => {
+
     if (intervalsRef.current[missionId]) {
       clearInterval(intervalsRef.current[missionId])
       delete intervalsRef.current[missionId]
@@ -187,24 +206,24 @@ export const useMission = (trafficLights: TrafficLight[], isRunning: boolean, pr
     setMissions(prev => prev.filter(m => m.id !== missionId))
   }
 
-const stopAllMissions = async () => {
-  Object.values(intervalsRef.current).forEach(clearInterval)
-  intervalsRef.current = {}
-  setEmergencyStates({})
+  const stopAllMissions = async () => {
+    Object.values(intervalsRef.current).forEach(clearInterval)
+    intervalsRef.current = {}
+    setEmergencyStates({})
 
-  for (const mission of missions) {
-    await axios.put(`http://localhost:3001/api/ambulancias/${mission.ambulance.id}`, {
-      nombre: mission.ambulance.nombre,
-      placa: mission.ambulance.placa,
-      estado: 'libre'
-    })
-    if (!mission.returning) {
-      await axios.put(`http://localhost:3001/api/emergencias/${mission.emergenciaId}/cancelar`)
+    for (const mission of missions) {
+      await axios.put(`${API_URL}/ambulancias/${mission.ambulance.id}`, {
+        nombre: mission.ambulance.nombre,
+        placa: mission.ambulance.placa,
+        estado: 'libre'
+      })
+      if (!mission.returning) {
+        await axios.put(`${API_URL}/emergencias/${mission.emergenciaId}/cancelar`)
+      }
     }
-  }
 
-  setMissions([])
-}
+    setMissions([])
+  }
 
   return { missions, emergencyStates, startMission, stopMission, stopAllMissions, getNearestAmbulance }
 }

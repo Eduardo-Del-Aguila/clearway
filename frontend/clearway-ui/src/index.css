@@ -1,1 +1,22 @@
 @import "tailwindcss";
+
+
+html {
+  scroll-behavior: smooth;
+}
+
+.progress {
+    animation: grow-progress linear forwards;
+    animation-timeline: scroll(root, block);
+}
+
+
+
+@keyframes grow-progress {
+    from{
+        width: 0%;
+    }
+    to {
+        width: 100%;
+    }
+}   

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import type { Hospital } from '../../types'
 
+const API_URL = import.meta.env.VITE_URL_API
 
 interface Ambulance {
   id: number
@@ -30,7 +31,7 @@ const HospitalDetailModal = ({ hospital, onClose, onEdit }: Props) => {
     const [editEstado, setEditEstado] = useState('')
 
     const fetchAmbulances = async () => {
-      const { data } = await axios.get(`http://localhost:3001/api/ambulancias/hospital/${hospital.id}`)
+      const { data } = await axios.get(`${API_URL}/ambulancias/hospital/${hospital.id}`)
       console.log('funcioanandoDetail');  
       setAmbulances(data)
     }
@@ -42,7 +43,7 @@ const HospitalDetailModal = ({ hospital, onClose, onEdit }: Props) => {
 
     const handleEditAmbulance = async (id: number) => {
       try {
-        await axios.put(`http://localhost:3001/api/ambulancias/${id}`, {
+        await axios.put(`${API_URL}/ambulancias/${id}`, {
           nombre: editNombre,
           placa: editPlaca,
           estado: editEstado
@@ -56,7 +57,7 @@ const HospitalDetailModal = ({ hospital, onClose, onEdit }: Props) => {
     const handleDeleteAmbulance = async (id: number) => {
       if (!confirm('Estas seguro de eliminar esta ambulancia?')) return
       try {
-        await axios.delete(`http://localhost:3001/api/ambulancias/${id}`)
+        await axios.delete(`${API_URL}/ambulancias/${id}`)
         fetchAmbulances()
       } catch (error) {
         console.error(error)
@@ -71,7 +72,7 @@ const HospitalDetailModal = ({ hospital, onClose, onEdit }: Props) => {
 
       setLoading(true)
       try {
-        await axios.post('http://localhost:3001/api/ambulancias', {
+        await axios.post(`${API_URL}/ambulancias`, {
           nombre,
           placa,
           hospital_id: hospital.id,

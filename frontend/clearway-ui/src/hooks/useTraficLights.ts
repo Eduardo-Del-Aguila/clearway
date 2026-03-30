@@ -3,13 +3,14 @@ import { io } from 'socket.io-client'
 import axios from 'axios'
 import type { TrafficLight } from '../types'
 
-const socket = io('http://localhost:3001')
+const API_URL = import.meta.env.VITE_URL_API
+const socket = io(`${API_URL}`)
 
 export const useTrafficLights = () => {
   const [trafficLights, setTrafficLights] = useState<TrafficLight[]>([])
 
   const fetchTrafficLights = async () => {
-    const { data } = await axios.get('http://localhost:3001/api/semaforos')
+    const { data } = await axios.get(`${API_URL}/semaforos`)
     setTrafficLights(data)
   }
 

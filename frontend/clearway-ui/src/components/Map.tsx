@@ -22,6 +22,7 @@ import type { Ambulance, Hospital, Mission, Position } from '../types';
 const ambulanceIcon = L.icon({
   iconUrl: 'https://cdn-icons-png.flaticon.com/512/1048/1048313.png',
   iconSize: [40, 40],
+  
 })
 
 const hospitalIcon = L.icon({
@@ -66,7 +67,7 @@ interface Props {
   protocolActive: boolean
 }
 
-const Map = ({ localStates, emergencyStates, counters, isRunning, missions, startMission, getNearestAmbulance, protocolActive }: Props) => {
+const Map = ({ localStates, emergencyStates, counters, isRunning, missions, protocolActive, startMission, getNearestAmbulance }: Props) => {
   const { hospitals } = useHospitals()
   const { ambulances } = useAmbulances(hospitals.map(h => h.id))
   const { trafficLights } = useTrafficLights()
@@ -161,7 +162,7 @@ const Map = ({ localStates, emergencyStates, counters, isRunning, missions, star
         {selectedHospital && (
           <Circle
             center={[selectedHospital.latitud, selectedHospital.longitud]}
-            radius={1500}
+            radius={500}
             pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.1 }}
           />
         )}

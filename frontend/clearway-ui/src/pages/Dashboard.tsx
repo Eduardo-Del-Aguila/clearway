@@ -5,6 +5,8 @@ import { useHospitals } from '../hooks/useHospitals'
 import { useAmbulances } from '../hooks/useAmbulances'
 import { useMission } from '../hooks/useMission'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import useEmergency from '../hooks/useEmergencyData'
 
 const Dashboard = () => {
   const { trafficLights } = useTrafficLights()
@@ -13,18 +15,23 @@ const Dashboard = () => {
   const { isRunning, localStates, counters, startSimulation, stopSimulation } = useSimulation(trafficLights)
   const [protocolActive, setProtocolActive] = useState(false)
   const { missions, emergencyStates, stopAllMissions, startMission, getNearestAmbulance,  } = useMission(trafficLights, isRunning, protocolActive)
-  
+  const { counts } = useEmergency()
+
+  const test = () => {
+
+  }
+
   return (
     <div className="flex h-screen bg-gray-900 text-white">
       <div className="w-64 bg-gray-800 p-4 flex flex-col gap-4 overflow-y-auto">
         <div>
-          <h1 className="text-xl font-bold text-red-500">ClearWay</h1>
+          <h1 className="text-xl font-bold text-red-500">ChuyaÑam</h1>
           <p className="text-gray-400 text-sm">Central SAMU</p>
         </div>
 
         <button
           onClick={isRunning ? () => { stopSimulation(); stopAllMissions() } : startSimulation}
-          className={`py-2 px-4 rounded font-bold text-sm ${isRunning ? 'bg-gray-600' : 'bg-red-600'}`}
+          className={`cursor-pointer py-2 px-4 rounded font-bold text-sm ${isRunning ? 'bg-gray-600' : 'bg-red-600'}`}
         >
           {isRunning ? 'Detener simulacion' : 'Iniciar simulacion'}
         </button>
@@ -33,7 +40,7 @@ const Dashboard = () => {
           <span className="text-sm text-gray-400">Protocolo emergencia</span>
           <button
             onClick={() => setProtocolActive(prev => !prev)}
-            className={`relative w-12 h-6 rounded-full transition-colors ${protocolActive ? 'bg-red-600' : 'bg-gray-600'}`}
+            className={`cursor-pointer relative w-12 h-6 rounded-full transition-colors ${protocolActive ? 'bg-red-600' : 'bg-gray-600'}`}
           >
             <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${protocolActive ? 'left-7' : 'left-1'}`} />
           </button>
@@ -88,12 +95,10 @@ const Dashboard = () => {
             <div className="flex h-10 justify-center items-center absolute z-1100 bg-red-600/60 group-hover:bg-red-600 
                             rounded-lg backdrop-blur-sm
                             transition-all duration-500 ease-in-out
-                            w-10 group-hover:w-[70%] "> 
+                            w-10 group-hover:w-[10%] "> 
                             <span className='text-center group-hover:hidden'>...</span>
               <ul className="hidden group-hover:flex gap-4 p-4 items-center justify-center w-full">
-                <li className="cursor-pointer hover:text-red-400">Opcióni</li>
-                <li className="cursor-pointer hover:text-red-400">Opcióni</li>
-                <li className="cursor-pointer hover:text-red-400">Opcióni</li>
+                <Link to="/"  className="cursor-pointer hover:text-red-400">Inicio</Link>
               </ul> 
             </div>
 
@@ -105,15 +110,23 @@ const Dashboard = () => {
           counters={counters} 
           isRunning={isRunning}
           missions={missions}
+          protocolActive={protocolActive}
           startMission={startMission}
           getNearestAmbulance={getNearestAmbulance}
-          protocolActive={protocolActive}
         />  
       </div>
 
       <div className="flex flex-col w-64 bg-gray-800 p-4">
-        <h2 className="text-lg font-bold mb-4">Emergencia activa</h2>
-        <p className="text-gray-400 text-sm">Sin emergencias</p>
+        <div>
+          <h2>Emergencias por ambulancia</h2>
+          <div className='flex flex-col w-full gap-2'>
+          {counts.map((item) => (
+            <div className='flex justify-between w-full' key={item.id}>
+                <span>{item.nombre}:</span> <span>{item.total}</span>
+            </div>
+          ))}
+          </div>
+        </div>
       </div>
     </div>
   )

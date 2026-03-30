@@ -13,6 +13,32 @@ router.get('/', async (req, res) => {
   }
 })
 
+router.get('/count-by-ambulance', async (req, res) => {
+  try {
+    const resultado = await pool.query(`
+      SELECT 
+        a.id,
+        a.nombre,
+        COUNT(e.id) as total
+      FROM emergencias e
+      JOIN ambulancias a ON e.ambulancia_id = a.id
+      WHERE e.ambulancia_id IS NOT NULL
+      GROUP BY a.id, a.nombre
+      ORDER BY total DESC
+    `)
+
+    res.status(200).json(
+      resultado.rows.map(row => ({
+        ...row,
+        total: Number(row.total)
+      }))
+    )
+
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
 router.post('/', async (req, res) => {
   const { latitud, longitud, ambulancia_id } = req.body
   try {
