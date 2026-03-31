@@ -2,8 +2,9 @@ const express = require('express')
 const cors = require('cors')
 const http = require('http')
 const { Server } = require('socket.io')
-require('dotenv').config()
-
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config()
+}
 
 
 const ambulanciasRouter = require('./routes/ambulancias.route')
@@ -18,7 +19,7 @@ const server = http.createServer(app)
 const io = new Server(server, {
   cors: 
   {
-    origin: 'http://localhost:5173',
+    origin: '*',
     methods: ['GET', 'POST']
   }
 })
