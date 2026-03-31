@@ -8,6 +8,8 @@ interface Props {
   onSuccess: () => void
 }
 
+const API_URL = import.meta.env.VITE_URL_API
+
 const EditHospitalModal = ({ hospital, onClose, onSuccess }: Props) => {
   const [nombre, setNombre] = useState(hospital.nombre)
   const [capacidad, setCapacidad] = useState(hospital.capacidad_ambulancias)
