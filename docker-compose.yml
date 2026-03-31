@@ -3,7 +3,7 @@ services:
   backend:
     build: ./backend
     environment:
-      DATABASE_URL: postgres://admin:lehia2006@chuyannam-clearwaydb-cisl20:5432/clearway
+      DATABASE_URL: postgres://admin:lehia2006@chuyannam-clearwaydb-cis120:5432/clearway
       PORT: 3001
     restart: always
 
