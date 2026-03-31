@@ -1,22 +1,10 @@
 version: '3.9'
 services:
-  db:
-    image: postgis/postgis:15-3.3
-    environment:
-      POSTGRES_DB: clearway
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: lehia2006
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    restart: always
-
   backend:
     build: ./backend
     environment:
-      DATABASE_URL: postgres://admin:lehia2006@db:5432/clearway
+      DATABASE_URL: postgres://admin:lehia2006@chuyannam-clearwaydb-cisl20:5432/clearway
       PORT: 3001
-    depends_on:
-      - db
     restart: always
 
   frontend:
