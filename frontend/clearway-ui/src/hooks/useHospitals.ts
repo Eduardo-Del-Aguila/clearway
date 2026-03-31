@@ -4,7 +4,8 @@ import axios from 'axios'
 import type { Hospital } from '../types'
 
 const API_URL = import.meta.env.VITE_URL_API
-const socket = io(`${API_URL}`)
+const SOCKET_URL = import.meta.env.VITE_URL_API.replace('/api', '')
+const socket = io(SOCKET_URL)
 
 
 export const useHospitals = () => {

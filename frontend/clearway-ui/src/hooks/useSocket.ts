@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { io } from 'socket.io-client'
 
 const API_URL = import.meta.env.VITE_URL_APIC
-const socket = io(`${API_URL}`)
+const SOCKET_URL = import.meta.env.VITE_URL_API.replace('/api', '')
+const socket = io(SOCKET_URL)
 
 interface Position {
   id: number

@@ -10,7 +10,8 @@ export interface EmergencyCount {
   total: number
 }
 
-const socket = io(API_URL)
+const SOCKET_URL = import.meta.env.VITE_URL_API.replace('/api', '')
+const socket = io(SOCKET_URL)
 
 const useEmergency = () => {
   const [counts, setCounts] = useState<EmergencyCount[]>([])
