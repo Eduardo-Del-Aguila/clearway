@@ -6,6 +6,8 @@ export const MISSION_COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#a85
 
 const API_URL = import.meta.env.VITE_URL_API
 
+const ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjI3Y2RjMzVhNmQwMTQ0YzJiMGNiNmUzMjFjMDY3YWEzIiwiaCI6Im11cm11cjY0In0='
+
 export const useMission = (trafficLights: TrafficLight[], isRunning: boolean, protocolActive: boolean) => {
   const [missions, setMissions] = useState<Mission[]>([])
   const intervalsRef = useRef<Record<string, ReturnType<typeof setInterval>>>({})
@@ -124,16 +126,15 @@ export const useMission = (trafficLights: TrafficLight[], isRunning: boolean, pr
     }
 
     const outboundData = await fetchRouteWithRetry(
-      `https://router.project-osrm.org/route/v1/driving/${ambulance.longitud},${ambulance.latitud};${emergency.lng},${emergency.lat}?overview=full&geometries=geojson`
+      `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${ORS_KEY}&start=${ambulance.longitud},${ambulance.latitud}&end=${emergency.lng},${emergency.lat}`
     )
-    const outboundCoords: [number, number][] = outboundData.routes[0].geometry.coordinates.map(
+    const outboundCoords: [number, number][] = outboundData.features[0].geometry.coordinates.map(
       ([lng, lat]: [number, number]) => [lat, lng]
     )
-
     const returnData = await fetchRouteWithRetry(
-      `https://router.project-osrm.org/route/v1/driving/${emergency.lng},${emergency.lat};${hospital.longitud},${hospital.latitud}?overview=full&geometries=geojson`
+      `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${ORS_KEY}&start=${emergency.lng},${emergency.lat}&end=${hospital.longitud},${hospital.latitud}`
     )
-    const returnCoords: [number, number][] = returnData.routes[0].geometry.coordinates.map(
+    const returnCoords: [number, number][] = returnData.features[0].geometry.coordinates.map(
       ([lng, lat]: [number, number]) => [lat, lng]
     )
 
