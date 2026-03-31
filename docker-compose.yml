@@ -21,8 +21,6 @@ services:
 
   frontend:
     build: ./frontend/clearway-ui
-    ports:
-      - "80:80"
     depends_on:
       - backend
     restart: always
