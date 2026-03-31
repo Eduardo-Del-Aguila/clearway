@@ -12,6 +12,8 @@ services:
 
   backend:
     build: ./backend
+    ports:
+      - "3001:3001"
     environment:
       DATABASE_URL: postgres://admin:lehia2006@db:5432/clearway
       PORT: 3001
@@ -21,6 +23,8 @@ services:
 
   frontend:
     build: ./frontend/clearway-ui
+    ports:
+      - "80:80"
     depends_on:
       - backend
     restart: always
