@@ -62,7 +62,7 @@ interface Props {
   counters: Record<number, number>
   isRunning: boolean
   missions: Mission[]
-  startMission: (ambulance: Ambulance, emergency: Position, color: string, hospital: Hospital) => Promise<void>
+  startMission: (ambulance: Ambulance, emergency: Position, color: string, hospital: Hospital, onMissionComplete?: (ambulanceId: number) => void) => Promise<void>
   getNearestAmbulance: (emergency: Position, ambulances: Ambulance[]) => Ambulance | null
   protocolActive: boolean
 }
@@ -71,6 +71,8 @@ const Map = ({ localStates, emergencyStates, counters, isRunning, missions, prot
   const { hospitals } = useHospitals()
   const { ambulances } = useAmbulances(hospitals.map(h => h.id))
   const { trafficLights } = useTrafficLights()
+
+  const [busyAmbulances, setBusyAmbulances] = useState<Set<number>>(new Set())
 
   const [missionColorIndex, setMissionColorIndex] = useState(0)
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
@@ -90,13 +92,28 @@ const Map = ({ localStates, emergencyStates, counters, isRunning, missions, prot
       alert('Inicia la simulacion primero')
       return
     }
-    const nearest = getNearestAmbulance({ lat, lng }, ambulances)
+
+    const availableAmbulances = ambulances.filter(a => !busyAmbulances.has(a.id))
+    const nearest = getNearestAmbulance({ lat, lng }, availableAmbulances)
     if (!nearest) return
+
     const hospital = hospitals.find(h => h.id === nearest.hospital_id)
     if (!hospital) return
+
     const color = MISSION_COLORS[missionColorIndex % MISSION_COLORS.length]
     setMissionColorIndex(prev => prev + 1)
-    await startMission(nearest, { lat, lng }, color, hospital)
+
+    // Bloquea inmediatamente
+    setBusyAmbulances(prev => new Set(prev).add(nearest.id))
+
+    await startMission(nearest, { lat, lng }, color, hospital, (ambulanceId) => {
+      // Libera cuando termina la misión
+      setBusyAmbulances(prev => {
+        const next = new Set(prev)
+        next.delete(ambulanceId)
+        return next
+      })
+    })
   }
 
   const handleAddHospital = (lat: number, lng: number) => setShowHospitalModal({ lat, lng })

@@ -119,7 +119,7 @@ export const useMission = (trafficLights: TrafficLight[], isRunning: boolean, pr
   }
 
 
-  const startMission = async (ambulance: Ambulance, emergency: Position, missionColor: string, hospital: Hospital) => {
+  const startMission = async (ambulance: Ambulance, emergency: Position, missionColor: string, hospital: Hospital, onMissionComplete?: (ambulanceId: number) => void) => {
     if (!isRunning) {
       alert('Inicia la simulacion antes de agregar una emergencia')
       return
@@ -192,6 +192,7 @@ export const useMission = (trafficLights: TrafficLight[], isRunning: boolean, pr
               estado: 'libre'
             })
             setMissions(prev => prev.filter(m => m.id !== missionId))
+            onMissionComplete?.(ambulance.id)
           }
         )
       }
