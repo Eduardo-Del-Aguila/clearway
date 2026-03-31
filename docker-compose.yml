@@ -22,7 +22,10 @@ services:
     restart: always
 
   frontend:
-    build: ./frontend/clearway-ui
+    build:
+      context: ./frontend/clearway-ui
+      args:
+        VITE_URL_API: http://144.225.147.96:3001/api
     ports:
       - "80:80"
     depends_on:
