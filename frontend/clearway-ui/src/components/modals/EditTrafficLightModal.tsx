@@ -9,6 +9,9 @@ interface Props {
   onSuccess: () => void
 }
 
+const API_URL = import.meta.env.VITE_URL_API
+
+
 const EditTrafficLightModal = ({ trafficLight, onClose, onSuccess }: Props) => {
   const [calle, setCalle] = useState(trafficLight.calle)
   const [tiempoVerde, setTiempoVerde] = useState(trafficLight.tiempo_verde)

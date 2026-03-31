@@ -3,8 +3,8 @@ import { io } from 'socket.io-client'
 import axios from 'axios'
 import type { Ambulance } from '../types'
 
-const socket = io('http://localhost:3001')
 const API_URL = import.meta.env.VITE_URL_API
+const socket = io(API_URL)
 
 
 export const useAmbulances = (hospitalIds: number[]) => {
